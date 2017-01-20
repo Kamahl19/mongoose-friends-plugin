@@ -4,10 +4,10 @@ mongoose-friends [![Build Status](https://travis-ci.org/numbers1311407/mongoose-
 2-way friendship relationship plugin for Mongoose ODM
 
 
-Installation 
+Installation
 ---
 
-    npm install mongoose-friends
+    npm i -S mongoose-friends
 
 
 Description and usage
@@ -19,90 +19,96 @@ doc without the need for a separate collection.
 
 Just include the plugin in the schema definition:
 
-    var friends = require("mongoose-friends")
-    var schema = new mongoose.Schema({ ... })
+    const friendsPlugin = require('mongoose-friends')
+    const schema = new mongoose.Schema({ ... })
 
     // optionally specify a name for the path (default is "friends")
-    schema.plugin(friends({pathName: "myCustomPath"}));
+    schema.plugin(friendsPlugin({ pathName: 'myCustomPath' }));
 
-    var User = mongoose.model("User", schema);
+    const User = mongoose.model('User', schema);
 
 
 Initiate a friend request via the `requestFriend` method:
 
-    User.requestFriend(user1._id, user2._id, callback);
+    User.requestFriend(user1._id, user2._id)
+      .then(() => console.log('Request sent'));
 
 The two users now share a friendship, with different statuses: "requested"
 and "pending", respectively.
 
-    User.getFriends(user1, function (err, friendships) {
-      // friendships looks like:
-      // [{status: "requested", added: <Date added>, friend: user2}]
-    });
+    User.getFriends(user1)
+      .then((friendships) => {
+        console.log(friendships); // [{ status: 'requested', added: <Date added>, friend: user2 }]
+      });
 
-    User.getFriends(user2, function (err, friendships) {
-      // friendships looks like:
-      // [{status: "pending", added: <Date added>, friend: user1}]
-    });
+    User.getFriends(user2)
+      .then((friendships) => {
+        console.log(friendships); // [{ status: 'pending', added: <Date added>, friend: user1 }]
+      });
 
 To accept, just reciprocate the request:
 
-    User.requestFriend(user2._id, user1._id, callback);
+    User.requestFriend(user2._id, user1._id)
+      .then(() => console.log('Request accepted'));
 
 The two users are now friends:
 
-    User.getFriends(user1, function (err, friendships) {
-      // friendships looks like:
-      // [{status: "accepted", added: <Date added>, friend: user2}]
-    });
+    User.getFriends(user1)
+      .then((friendships) => {
+        console.log(friendships); // [{ status: 'accepted', added: <Date added>, friend: user2 }]
+      });
 
-    User.getFriends(user2, function (err, friendships) {
-      // friendships looks like:
-      // [{status: "accepted", added: <Date added>, friend: user1}]
-    });
+    User.getFriends(user2)
+      .then((friendships) => {
+        console.log(friendships); // [{ status: 'accepted', added: <Date added>, friend: user1 }]
+      });
 
 To remove a friendship at any point in the process, just:
 
-    User.removeFriend(user1, user2, callback);
+    User.removeFriend(user1, user2)
+      .then(() => console.log('Friendship removed'));
     // or vice-versa
-    User.removeFriend(user2, user1, callback);
+    User.removeFriend(user2, user1)
+      .then(() => console.log('Friendship removed'));
 
 All the static methods have instance variants:
 
-    user.getFriends(options, cb);
-    user.requestFriend(otheruser, cb);
-    user.removeFriend(badfriend, cb);
+    user.getFriends(options).then((friends) => console.log(friends));
+    user.requestFriend(otheruser).then(() => ...);
+    user.removeFriend(badfriend).then(() => ...);
 
 Retrieving friends
 ---
 
-`getFriends` is the interface to retrieve friends for a user.  It sits on 
-top of the normal Mongoose `find` API and has the same signature, he only 
-exception that the first argument is a model (or the id of a model) that 
-you're querying for.  This means you can pass along field selects, sorts
-limits, etc.
+`getFriends` is the interface to retrieve friends for a user. It sits on
+top of the normal Mongoose `find` API and has **similar** signature with 3 exceptions:
+the first argument is a model (or the id of a model) that
+you're querying for, `conditions`, `select` and `options` are properties of an object
+and there is no callback (use promise instead).
+This means you can pass along field selects, sorts limits, etc.
 
     // the signature
-    User.getFriends(user, conditions, select, options, callback);
+    User.getFriends(user, { conditions, select, options })
+      .then((friends) => ...);
 
 For example to find only friends whose names start with "Bo" you could:
 
-    User.getFriends(user, {name: /^Bo/}, cb);
+    User.getFriends(user, {name: /^Bo/});
 
 To select only the name field you might:
 
-    User.getFriends(user, {}, {name: 1}, cb);
+    User.getFriends(user, {}, {name: 1});
 
 Or to sort by user name you might:
 
-    User.getFriends(user, {}, null, {sort: {name: 1}}, cb);
+    User.getFriends(user, {}, null, { sort: { name: 1 } });
 
 Friendships of different statuses can be queried in this manner:
 
     // get the pending friendships for a user (given that the pathname
     // for the friends array is left the default, "friends")
-    var Status = require("mongoose-friends").Status;
-    User.getFriends(user, {"friends.status": Status.Pending}, cb);
+    const Status = require('mongoose-friends').Status;
+    User.getFriends(user, { 'friends.status': Status.Pending });
 
 ... but for convenience purposes they can also be retrieved through
 provided convenience methods:
@@ -112,16 +118,16 @@ provided convenience methods:
     User.getRequestedFriends;
     // with instance method versions provided for each
 
-The callback return value of `getFriends` is an array of friends, wrapped 
+The callback return value of `getFriends` is an array of friends, wrapped
 with the friendship metadata for the given user, like:
 
     [{
       // One of pending|accepted|requested where:
-      // 
+      //
       // pending: received, but not yet accepted
       // requested: sent, but not yet accepted by other party
       // accepted: accepted by both parties
-      status: "accepted",
+      status: 'accepted',
 
       // The date the friendship request was first *created* (NOT accepted)
       added: <the date added>,
@@ -157,13 +163,7 @@ Indexing
 ---
 
 By default, the plugin will add a multikey index on the friends array.
-If you do not want this behavior for whatever reason, just pass 
+If you do not want this behavior for whatever reason, just pass
 `index: false` to the plugin options, like:
 
-    schema.plugin(friends({index: false}));
-
-
-Roadmap
----
-
-- Add "favorite" friend functionality
+    schema.plugin(friends({ index: false }));
