@@ -1,13 +1,13 @@
-mongoose-friends [![Build Status](https://travis-ci.org/numbers1311407/mongoose-friends.png)](http://travis-ci.org/numbers1311407/mongoose-friends)
+mongoose-friends-plugin [![Build Status](https://travis-ci.org/kamahl19/mongoose-friends-plugin.png)](http://travis-ci.org/kamahl19/mongoose-friends-plugin)
 ===
 
-2-way friendship relationship plugin for Mongoose ODM
+2-way friendship relationship plugin for Mongoose ODM (initially forked from [numbers1311407/mongoose-friends](https://github.com/numbers1311407/mongoose-friends))
 
 
 Installation
 ---
 
-    npm i -S mongoose-friends
+    npm i -S mongoose-friends-plugin
 
 
 Description and usage
@@ -19,7 +19,7 @@ doc without the need for a separate collection.
 
 Just include the plugin in the schema definition:
 
-    const friendsPlugin = require('mongoose-friends')
+    const friendsPlugin = require('mongoose-friends-plugin')
     const schema = new mongoose.Schema({ ... })
 
     // optionally specify a name for the path (default is "friends")
@@ -107,7 +107,7 @@ Friendships of different statuses can be queried in this manner:
 
     // get the pending friendships for a user (given that the pathname
     // for the friends array is left the default, "friends")
-    const Status = require('mongoose-friends').Status;
+    const Status = require('mongoose-friends-plugin').Status;
     User.getFriends(user, { 'friends.status': Status.Pending });
 
 ... but for convenience purposes they can also be retrieved through

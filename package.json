@@ -1,12 +1,12 @@
 {
-  "name": "mongoose-friends",
+  "name": "mongoose-friends-plugin",
   "version": "0.3.0",
   "description": "2-way friendship relationship plugin for Mongoose ODM",
-  "author": "Travis Cox <numbers1311407@gmail.com>",
+  "author": "Martin Litvaj <kamahl19@gmail.com>",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kamahl19/mongoose-friends"
+    "url": "https://github.com/kamahl19/mongoose-friends-plugin"
   },
   "scripts": {
     "test": "cross-env NODE_ENV=test && \"./node_modules/.bin/mocha\" --compilers js:babel-core/register test/*.js"
@@ -18,7 +18,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kamahl19/mongoose-friends/issues"
+    "url": "https://github.com/kamahl19/mongoose-friends-plugin/issues"
   },
   "dependencies": {
     "async": "~2.1.4",
