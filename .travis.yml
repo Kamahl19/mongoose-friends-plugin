@@ -3,3 +3,5 @@ node_js:
   - 7
 services:
   - mongodb
+env:
+  - MONGODB_TEST=mongodb://127.0.0.1
