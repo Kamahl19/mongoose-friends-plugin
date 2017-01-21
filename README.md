@@ -17,10 +17,14 @@ Easily add "friendships" to your Mongoose user Model through a simple
 plugin.  The friendships are stored in a sub-document array on the model
 doc without the need for a separate collection.
 
-Just include the plugin in the schema definition:
+At first, make sure your mongoose is using [promise](http://mongoosejs.com/docs/promises.html)
 
-    const friendsPlugin = require('mongoose-friends-plugin')
-    const schema = new mongoose.Schema({ ... })
+    mongoose.Promise = global.Promise;
+
+Then include the plugin in the schema definition:
+
+    const friendsPlugin = require('mongoose-friends-plugin');
+    const schema = new mongoose.Schema({ ... });
 
     // optionally specify a name for the path (default is "friends")
     schema.plugin(friendsPlugin({ pathName: 'myCustomPath' }));
