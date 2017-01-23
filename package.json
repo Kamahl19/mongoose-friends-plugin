@@ -10,7 +10,7 @@
   "private": false,
   "license": "MIT",
   "engine": "node >= 0.10.x",
-  "main": "dist/plugin.js",
+  "main": "index.js",
   "scripts": {
     "lint": "eslint src test",
     "build:source": "rimraf dist/ && babel src/ --out-dir dist/",
