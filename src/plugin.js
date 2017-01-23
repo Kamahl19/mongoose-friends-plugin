@@ -355,7 +355,7 @@ function friendsPlugin(options) {
 
       return friendshipBetween(m1, m2, this)
         .then((doc) => Promise.resolve(!!doc && doc.status === Status.Accepted))
-        .catch((err) => Promise.resolve(false));
+        .catch(() => Promise.resolve(false));
     }
 
     /**

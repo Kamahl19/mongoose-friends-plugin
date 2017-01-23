@@ -1,10 +1,8 @@
 const mongoose = require('mongoose');
-const friendsPlugin = require('../');
+const friendsPlugin = require('../dist/plugin');
 const Status = friendsPlugin.Status;
 const assert = require('assert');
 const should = require('should');
-
-require('babel-polyfill');
 
 require('dotenv').config();
 
@@ -276,7 +274,7 @@ suite('friends', function() {
               request(u5, u4),
             ]);
           })
-          .then((friends) => {
+          .then(() => {
             return User.getFriends(u1)
               .then((friends) => {
                 friends.length.should.eql(5);

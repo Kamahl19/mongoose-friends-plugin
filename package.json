@@ -1,34 +1,51 @@
 {
   "name": "mongoose-friends-plugin",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "2-way friendship relationship plugin for Mongoose ODM",
   "author": "Martin Litvaj <kamahl19@gmail.com>",
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/kamahl19/mongoose-friends-plugin"
-  },
-  "scripts": {
-    "test": "cross-env NODE_ENV=test && \"./node_modules/.bin/mocha\" --compilers js:babel-core/register test/*.js"
-  },
-  "keywords": [
-    "mongoose",
-    "friendships",
-    "friends"
-  ],
-  "license": "MIT",
+  "homepage": "https://github.com/kamahl19/mongoose-friends-plugin",
   "bugs": {
     "url": "https://github.com/kamahl19/mongoose-friends-plugin/issues"
   },
+  "private": false,
+  "license": "MIT",
+  "engine": "node >= 0.10.x",
+  "main": "dist/plugin.js",
+  "scripts": {
+    "lint": "eslint src test",
+    "build:source": "rimraf dist/ && babel src/ --out-dir dist/",
+    "build:tests": "rimraf test-dist/ && babel test/ --out-dir test-dist/",
+    "clean": "rimraf dist/ && rimraf test-dist/",
+    "build": "npm run build:source && npm run build:tests",
+    "test": "node node_modules/mocha/bin/mocha --reporter spec --require should --ui tdd test-dist/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:kamahl19/mongoose-friends-plugin.git"
+  },
+  "keywords": [
+    "mongoose",
+    "plugin",
+    "friendships",
+    "friends"
+  ],
   "devDependencies": {
-    "babel-core": "^6.22.1",
-    "babel-polyfill": "^6.22.0",
-    "babel-preset-es2017": "^6.22.0",
-    "babel-preset-stage-3": "^6.22.0",
-    "cross-env": "^3.1.4",
+    "babel-cli": "6.22.2",
+    "babel-core": "6.22.1",
+    "babel-eslint": "7.1.1",
+    "babel-preset-latest": "6.22.0",
+    "babel-preset-stage-3": "6.22.0",
     "dotenv": "^4.0.0",
-    "mocha": "~3.2.0",
-    "mongoose": "~4.7.7",
-    "should": "~11.1.2"
+    "eslint": "3.14.0",
+    "gulp": "3.9.1",
+    "gulp-babel": "6.1.2",
+    "gulp-eslint": "3.0.1",
+    "gulp-mocha": "3.0.1",
+    "gulp-rimraf": "0.2.1",
+    "mocha": "3.2.0",
+    "mongoose": "4.7.7",
+    "rimraf": "2.5.4",
+    "run-sequence": "1.2.2",
+    "should": "11.1.2"
   }
 }
