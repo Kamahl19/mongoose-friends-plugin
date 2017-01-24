@@ -1,4 +1,4 @@
-mongoose-friends-plugin [![Build Status](https://travis-ci.org/kamahl19/mongoose-friends-plugin.png)](http://travis-ci.org/kamahl19/mongoose-friends-plugin)
+mongoose-friends-plugin [![Build Status](https://travis-ci.org/Kamahl19/mongoose-friends-plugin.svg?branch=master)](https://travis-ci.org/Kamahl19/mongoose-friends-plugin)
 ===
 
 2-way friendship relationship plugin for Mongoose ODM (initially forked from [numbers1311407/mongoose-friends](https://github.com/numbers1311407/mongoose-friends))
