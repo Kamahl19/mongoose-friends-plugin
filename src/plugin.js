@@ -57,8 +57,9 @@ function friendsPlugin(options) {
    * @returns a function to create a new friendship between two parties
    * @api private
    */
-  const createFriendship = (m1, m2, fship) => {
+  const createFriendship = (m1, m2, fship, data) => {
     fship.added = new Date();
+    fship.data = data;
 
     return this.findOneAndUpdate({ _id: m1 }, {
       $push: {
@@ -123,9 +124,10 @@ function friendsPlugin(options) {
      *
      * @param {Model} m1 the "friender" model doc or _id doing the reqesting
      * @param {Model} m2 the "friendee" model doc or _id being requested
+     * @param {Object} data Optional object holding additional info about relationship
      * @returns {Promise}
      */
-    schema.statics.requestFriend = function(m1, m2) {
+    schema.statics.requestFriend = function(m1, m2, data) {
       m1 = m1._id || m1;
       m2 = m2._id || m2;
 
@@ -147,8 +149,8 @@ function friendsPlugin(options) {
 
             steps[0] = createFriendship(m2, m1, {
               _id: m1,
-              status: Status.Pending
-            }).bind(this);
+              status: Status.Pending,
+            }, data).bind(this);
           }
           else {
             switch (m2Res.status) {
@@ -185,7 +187,7 @@ function friendsPlugin(options) {
           }
           // Or push a new one if it did not exist prior
           else {
-            steps[1] = createFriendship(m1, m2, fship).bind(this);
+            steps[1] = createFriendship(m1, m2, fship, data).bind(this);
           }
 
           return Promise.all(steps)
@@ -200,10 +202,11 @@ function friendsPlugin(options) {
      * Create a friend request
      *
      * @param {Model} friend The potential friend being requested
+     * @param {Object} data Optional object holding additional info about relationship
      * @returns {Promise}
      */
-    schema.methods.requestFriend = function(friend) {
-      return this.constructor.requestFriend(this, friend);
+    schema.methods.requestFriend = function(friend, data) {
+      return this.constructor.requestFriend(this, friend, data);
     };
 
     /**
