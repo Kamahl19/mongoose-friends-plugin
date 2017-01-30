@@ -25,6 +25,8 @@ var defaultOptions = {
 module.exports = friendsPlugin;
 
 function friendsPlugin(options) {
+  var _this = this;
+
   var _defaultOptions$optio = _extends({}, defaultOptions, options),
       pathName = _defaultOptions$optio.pathName,
       doIndex = _defaultOptions$optio.doIndex;
@@ -35,8 +37,7 @@ function friendsPlugin(options) {
   var fields = _defineProperty({}, pathName, { type: [Friendship], select: false });
 
   /**
-   * Generate a function to return one side of a friendship between
-   * two models
+   * Generate a function to return one side of a friendship between two models
    *
    * @param Model the extending model
    * @param m1 the model or model _id being queried
@@ -53,6 +54,51 @@ function friendsPlugin(options) {
       }
 
       return doc[pathName][0];
+    });
+  };
+
+  /**
+   * Create friendship
+   *
+   * @returns a function to create a new friendship between two parties
+   * @api private
+   */
+  var createFriendship = function createFriendship(m1, m2, fship, data) {
+    fship.added = new Date();
+    fship.data = data;
+
+    return _this.findOneAndUpdate({ _id: m1 }, {
+      $push: _defineProperty({}, pathName, fship)
+    }, { new: false }).then(function () {
+      return fship;
+    });
+  };
+
+  /**
+   * Update friendship
+   *
+   * @returns a function to update a friendship between two parties
+   * @api private
+   */
+  var updateFriendship = function updateFriendship(m1, m2, fship) {
+    return _this.findOneAndUpdate(_defineProperty({
+      _id: m1
+    }, pathName, { $elemMatch: { _id: m2 } }), {
+      $set: _defineProperty({}, pathName + '.$.status', fship.status)
+    }, { new: false }).then(function () {
+      return fship;
+    });
+  };
+
+  /**
+   * Remove friendship
+   *
+   * @returns a function to remove a friendship between two parties
+   * @api private
+   */
+  var removeFriendship = function removeFriendship(m1, m2) {
+    return _this.collection.update({ _id: m1 }, {
+      $pull: _defineProperty({}, pathName, { _id: m2 })
     });
   };
 
@@ -77,33 +123,14 @@ function friendsPlugin(options) {
      *
      * @param {Model} m1 the "friender" model doc or _id doing the reqesting
      * @param {Model} m2 the "friendee" model doc or _id being requested
+     * @param {Object} data Optional object holding additional info about relationship
      * @returns {Promise}
      */
-    schema.statics.requestFriend = function (m1, m2) {
-      var _this = this;
+    schema.statics.requestFriend = function (m1, m2, data) {
+      var _this2 = this;
 
       m1 = m1._id || m1;
       m2 = m2._id || m2;
-
-      var updateFriendship = function updateFriendship(m1, m2, fship) {
-        return _this.findOneAndUpdate(_defineProperty({
-          _id: m1
-        }, pathName, { $elemMatch: { _id: m2 } }), {
-          $set: _defineProperty({}, pathName + '.$.status', fship.status)
-        }, { new: false }).then(function () {
-          return fship;
-        });
-      };
-
-      var createFriendship = function createFriendship(m1, m2, fship) {
-        fship.added = new Date();
-
-        return _this.findOneAndUpdate({ _id: m1 }, {
-          $push: _defineProperty({}, pathName, fship)
-        }, { new: false }).then(function () {
-          return fship;
-        });
-      };
 
       return Promise.all([friendshipBetween(m1, m2, this), friendshipBetween(m2, m1, this)]).then(function (_ref) {
         var _ref2 = _slicedToArray(_ref, 2),
@@ -112,7 +139,6 @@ function friendsPlugin(options) {
 
         var hasfship = !!m1Res;
         var fship = m1Res || { _id: m2 };
-        var oid = fship._id;
         var ostatus = fship.status;
 
         var steps = [];
@@ -125,7 +151,7 @@ function friendsPlugin(options) {
           steps[0] = createFriendship(m2, m1, {
             _id: m1,
             status: Status.Pending
-          });
+          }, data).bind(_this2);
         } else {
           switch (m2Res.status) {
             // m2 status is still pending, no update
@@ -141,7 +167,7 @@ function friendsPlugin(options) {
               fship.status = Status.Accepted;
               steps[0] = updateFriendship(m2, m1, {
                 status: Status.Accepted
-              });
+              }).bind(_this2);
               break;
           }
         }
@@ -152,16 +178,16 @@ function friendsPlugin(options) {
         }
 
         // If no update was necessary, send the local friendship back directly
-        if (hasfship && ostatus === fship.status && oid.equals(fship._id)) {
+        if (hasfship && ostatus === fship.status) {
           steps[1] = Promise.resolve(fship);
         }
         // Otherwise update it
         else if (hasfship) {
-            steps[1] = updateFriendship(m1, m2, fship);
+            steps[1] = updateFriendship(m1, m2, fship).bind(_this2);
           }
           // Or push a new one if it did not exist prior
           else {
-              steps[1] = createFriendship(m1, m2, fship);
+              steps[1] = createFriendship(m1, m2, fship, data).bind(_this2);
             }
 
         return Promise.all(steps).then(function (results) {
@@ -177,10 +203,11 @@ function friendsPlugin(options) {
      * Create a friend request
      *
      * @param {Model} friend The potential friend being requested
+     * @param {Object} data Optional object holding additional info about relationship
      * @returns {Promise}
      */
-    schema.methods.requestFriend = function (friend) {
-      return this.constructor.requestFriend(this, friend);
+    schema.methods.requestFriend = function (friend, data) {
+      return this.constructor.requestFriend(this, friend, data);
     };
 
     /**
@@ -411,18 +438,10 @@ function friendsPlugin(options) {
      * @returns {Promise}
      */
     schema.statics.removeFriend = function (m1, m2) {
-      var collection = this.collection;
-
       m1 = m1._id || m1;
       m2 = m2._id || m2;
 
-      var pull = function pull(m1, m2) {
-        return collection.update({ _id: m1 }, {
-          $pull: _defineProperty({}, pathName, { _id: m2 })
-        });
-      };
-
-      return Promise.all([pull(m1, m2), pull(m2, m1)]);
+      return Promise.all([removeFriendship(m1, m2).bind(this), removeFriendship(m2, m1).bind(this)]);
     };
 
     /**
