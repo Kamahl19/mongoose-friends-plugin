@@ -1,3 +1,5 @@
+const { Schema } = require('mongoose');
+
 const Status = {
   Pending: 'pending',
   Accepted: 'accepted',
@@ -7,6 +9,7 @@ const Status = {
 const Friendship = {
   status: { type: String, enum: Object.values(Status) },
   added: { type: Date },
+  data: { type: Schema.Types.Mixed },
 };
 
 const defaultOptions = {

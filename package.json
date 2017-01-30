@@ -1,6 +1,6 @@
 {
   "name": "mongoose-friends-plugin",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "2-way friendship relationship plugin for Mongoose ODM",
   "author": "Martin Litvaj <kamahl19@gmail.com>",
   "homepage": "https://github.com/kamahl19/mongoose-friends-plugin",
@@ -43,9 +43,11 @@
     "gulp-mocha": "3.0.1",
     "gulp-rimraf": "0.2.1",
     "mocha": "3.2.0",
-    "mongoose": "4.7.7",
     "rimraf": "2.5.4",
     "run-sequence": "1.2.2",
     "should": "11.1.2"
+  },
+  "peerDependencies": {
+    "mongoose": "4.7.7"
   }
 }

@@ -40,24 +40,27 @@ suite('friends', function() {
   suite('requesting friends', function() {
     suite('.requestFriend', function() {
       setup(function() {
-        return User.requestFriend(u1, u2);
+        return User.requestFriend(u1, u2, 'test');
       });
 
       // test the basic behavior
       requestFriendBehavior();
 
       test('request by requested should accept friendship on both sides', function() {
-        return User.requestFriend(u2, u1)
+        return User.requestFriend(u2, u1, 'test')
           .then((fships) => {
             fships.friender.status.should.eql(Status.Accepted);
+            fships.friender.data.should.eql('test');
           })
           .then(() => User.findById(u1._id, pathName))
           .then((doc) => {
             doc[pathName].id(u2.id).status.should.eql(Status.Accepted);
+            doc[pathName].id(u2.id).data.should.eql('test');
           })
           .then(() => User.findById(u2._id, pathName))
           .then((doc) => {
             doc[pathName].id(u1.id).status.should.eql(Status.Accepted);
+            doc[pathName].id(u1.id).data.should.eql('test');
           });
       });
 
@@ -130,17 +133,18 @@ suite('friends', function() {
 
     suite('#requestFriend', function() {
       setup(function() {
-        return u1.requestFriend(u2);
+        return u1.requestFriend(u2, 'test');
       });
 
       requestFriendBehavior();
     });
 
-    function requestFriendBehavior () {
+    function requestFriendBehavior() {
       test('requester should have requested friend request', function() {
         return User.findById(u1._id, pathName)
           .then((doc) => {
             doc[pathName].id(u2.id).status.should.eql(Status.Requested);
+            doc[pathName].id(u2.id).data.should.eql('test');
           });
       });
 
@@ -148,6 +152,7 @@ suite('friends', function() {
         return User.findById(u2._id, pathName)
           .then((doc) => {
             doc[pathName].id(u1.id).status.should.eql(Status.Pending);
+            doc[pathName].id(u1.id).data.should.eql('test');
           });
       });
     }

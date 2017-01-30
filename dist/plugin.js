@@ -6,6 +6,9 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+var _require = require('mongoose'),
+    Schema = _require.Schema;
+
 var Status = {
   Pending: 'pending',
   Accepted: 'accepted',
@@ -14,7 +17,8 @@ var Status = {
 
 var Friendship = {
   status: { type: String, enum: Object.values(Status) },
-  added: { type: Date }
+  added: { type: Date },
+  data: { type: Schema.Types.Mixed }
 };
 
 var defaultOptions = {
