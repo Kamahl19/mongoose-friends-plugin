@@ -93,7 +93,7 @@ function friendsPlugin(options) {
    * @api private
    */
   const removeFriendship = function(m1, m2) {
-    return this.collection.update({ _id: m1 }, {
+    return this.update({ _id: m1 }, {
       $pull: {
         [pathName]: { _id: m2 }
       }
