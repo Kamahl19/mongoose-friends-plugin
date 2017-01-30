@@ -28,8 +28,7 @@ function friendsPlugin(options) {
   };
 
   /**
-   * Generate a function to return one side of a friendship between
-   * two models
+   * Generate a function to return one side of a friendship between two models
    *
    * @param Model the extending model
    * @param m1 the model or model _id being queried
@@ -51,6 +50,55 @@ function friendsPlugin(options) {
         return doc[pathName][0];
       });
   };
+
+  /**
+   * Create friendship
+   *
+   * @returns a function to create a new friendship between two parties
+   * @api private
+   */
+  const createFriendship = (m1, m2, fship) => {
+    fship.added = new Date();
+
+    return this.findOneAndUpdate({ _id: m1 }, {
+      $push: {
+        [pathName]: fship,
+      },
+    }, { new: false })
+      .then(() => fship);
+  };
+
+  /**
+   * Update friendship
+   *
+   * @returns a function to update a friendship between two parties
+   * @api private
+   */
+  const updateFriendship = (m1, m2, fship) => {
+    return this.findOneAndUpdate({
+      _id: m1,
+      [pathName]: { $elemMatch: { _id: m2 } },
+    }, {
+      $set: {
+        [`${pathName}.$.status`]: fship.status,
+      },
+    }, { new: false })
+      .then(() => fship);
+  }
+
+  /**
+   * Remove friendship
+   *
+   * @returns a function to remove a friendship between two parties
+   * @api private
+   */
+  const removeFriendship = (m1, m2) => {
+    return this.collection.update({ _id: m1 }, {
+      $pull: {
+        [pathName]: { _id: m2 }
+      }
+    });
+  }
 
   return function friends(schema) {
     // add the embedded friends
@@ -81,29 +129,6 @@ function friendsPlugin(options) {
       m1 = m1._id || m1;
       m2 = m2._id || m2;
 
-      const updateFriendship = (m1, m2, fship) => {
-        return this.findOneAndUpdate({
-          _id: m1,
-          [pathName]: { $elemMatch: { _id: m2 } },
-        }, {
-          $set: {
-            [`${pathName}.$.status`]: fship.status,
-          },
-        }, { new: false })
-          .then(() => fship);
-      }
-
-      const createFriendship = (m1, m2, fship) => {
-        fship.added = new Date();
-
-        return this.findOneAndUpdate({ _id: m1 }, {
-          $push: {
-            [pathName]: fship,
-          },
-        }, { new: false })
-          .then(() => fship);
-      };
-
       return Promise.all([
         friendshipBetween(m1, m2, this),
         friendshipBetween(m2, m1, this),
@@ -124,7 +149,7 @@ function friendsPlugin(options) {
             steps[0] = createFriendship(m2, m1, {
               _id: m1,
               status: Status.Pending
-            });
+            }).bind(this);
           }
           else {
             switch (m2Res.status) {
@@ -141,7 +166,7 @@ function friendsPlugin(options) {
                 fship.status = Status.Accepted;
                 steps[0] = updateFriendship(m2, m1, {
                   status: Status.Accepted
-                });
+                }).bind(this);
                 break;
             }
           }
@@ -157,11 +182,11 @@ function friendsPlugin(options) {
           }
           // Otherwise update it
           else if (hasfship) {
-            steps[1] = updateFriendship(m1, m2, fship);
+            steps[1] = updateFriendship(m1, m2, fship).bind(this);
           }
           // Or push a new one if it did not exist prior
           else {
-            steps[1] = createFriendship(m1, m2, fship);
+            steps[1] = createFriendship(m1, m2, fship).bind(this);
           }
 
           return Promise.all(steps)
@@ -376,22 +401,12 @@ function friendsPlugin(options) {
      * @returns {Promise}
      */
     schema.statics.removeFriend = function(m1, m2) {
-      const collection = this.collection;
-
       m1 = m1._id || m1;
       m2 = m2._id || m2;
 
-      const pull = (m1, m2) => {
-        return collection.update({ _id: m1 }, {
-          $pull: {
-            [pathName]: { _id: m2 }
-          }
-        });
-      }
-
       return Promise.all([
-        pull(m1, m2),
-        pull(m2, m1),
+        removeFriendship(m1, m2).bind(this),
+        removeFriendship(m2, m1).bind(this),
       ]);
     };
 
