@@ -25,8 +25,6 @@ var defaultOptions = {
 module.exports = friendsPlugin;
 
 function friendsPlugin(options) {
-  var _this = this;
-
   var _defaultOptions$optio = _extends({}, defaultOptions, options),
       pathName = _defaultOptions$optio.pathName,
       doIndex = _defaultOptions$optio.doIndex;
@@ -42,13 +40,12 @@ function friendsPlugin(options) {
    * @param Model the extending model
    * @param m1 the model or model _id being queried
    * @param m2 the model or model _id whose friendship is queried for
-   * @param that context
    *
    * @returns a function which will call back with an friendship for m2 on m1
    * @api private
    */
-  var friendshipBetween = function friendshipBetween(m1, m2, that) {
-    return that.findById(m1, _defineProperty({}, pathName, { $elemMatch: { _id: m2 } })).then(function (doc) {
+  var friendshipBetween = function friendshipBetween(m1, m2) {
+    return this.findById(m1, _defineProperty({}, pathName, { $elemMatch: { _id: m2 } })).then(function (doc) {
       if (!doc) {
         return Promise.reject('Friendship not found');
       }
@@ -67,7 +64,7 @@ function friendsPlugin(options) {
     fship.added = new Date();
     fship.data = data;
 
-    return _this.findOneAndUpdate({ _id: m1 }, {
+    return this.findOneAndUpdate({ _id: m1 }, {
       $push: _defineProperty({}, pathName, fship)
     }, { new: false }).then(function () {
       return fship;
@@ -81,7 +78,7 @@ function friendsPlugin(options) {
    * @api private
    */
   var updateFriendship = function updateFriendship(m1, m2, fship) {
-    return _this.findOneAndUpdate(_defineProperty({
+    return this.findOneAndUpdate(_defineProperty({
       _id: m1
     }, pathName, { $elemMatch: { _id: m2 } }), {
       $set: _defineProperty({}, pathName + '.$.status', fship.status)
@@ -97,7 +94,7 @@ function friendsPlugin(options) {
    * @api private
    */
   var removeFriendship = function removeFriendship(m1, m2) {
-    return _this.collection.update({ _id: m1 }, {
+    return this.collection.update({ _id: m1 }, {
       $pull: _defineProperty({}, pathName, { _id: m2 })
     });
   };
@@ -127,12 +124,12 @@ function friendsPlugin(options) {
      * @returns {Promise}
      */
     schema.statics.requestFriend = function (m1, m2, data) {
-      var _this2 = this;
+      var _this = this;
 
       m1 = m1._id || m1;
       m2 = m2._id || m2;
 
-      return Promise.all([friendshipBetween(m1, m2, this), friendshipBetween(m2, m1, this)]).then(function (_ref) {
+      return Promise.all([friendshipBetween.call(this, m1, m2), friendshipBetween.call(this, m2, m1)]).then(function (_ref) {
         var _ref2 = _slicedToArray(_ref, 2),
             m1Res = _ref2[0],
             m2Res = _ref2[1];
@@ -148,10 +145,10 @@ function friendsPlugin(options) {
         if (!m2Res) {
           fship.status = Status.Requested;
 
-          steps[0] = createFriendship(m2, m1, {
+          steps[0] = createFriendship.call(_this, m2, m1, {
             _id: m1,
             status: Status.Pending
-          }, data).bind(_this2);
+          }, data);
         } else {
           switch (m2Res.status) {
             // m2 status is still pending, no update
@@ -165,9 +162,9 @@ function friendsPlugin(options) {
             // m2 already requested m1, mark BOTH friendships as accepted
             case Status.Requested:
               fship.status = Status.Accepted;
-              steps[0] = updateFriendship(m2, m1, {
+              steps[0] = updateFriendship.call(_this, m2, m1, {
                 status: Status.Accepted
-              }).bind(_this2);
+              });
               break;
           }
         }
@@ -183,11 +180,11 @@ function friendsPlugin(options) {
         }
         // Otherwise update it
         else if (hasfship) {
-            steps[1] = updateFriendship(m1, m2, fship).bind(_this2);
+            steps[1] = updateFriendship.call(_this, m1, m2, fship);
           }
           // Or push a new one if it did not exist prior
           else {
-              steps[1] = createFriendship(m1, m2, fship, data).bind(_this2);
+              steps[1] = createFriendship.call(_this, m1, m2, fship, data);
             }
 
         return Promise.all(steps).then(function (results) {
@@ -413,7 +410,7 @@ function friendsPlugin(options) {
       m1 = m1._id || m1;
       m2 = m2._id || m2;
 
-      return friendshipBetween(m1, m2, this).then(function (doc) {
+      return friendshipBetween.call(this, m1, m2).then(function (doc) {
         return Promise.resolve(!!doc && doc.status === Status.Accepted);
       }).catch(function () {
         return Promise.resolve(false);
@@ -441,7 +438,7 @@ function friendsPlugin(options) {
       m1 = m1._id || m1;
       m2 = m2._id || m2;
 
-      return Promise.all([removeFriendship(m1, m2).bind(this), removeFriendship(m2, m1).bind(this)]);
+      return Promise.all([removeFriendship.call(this, m1, m2), removeFriendship.call(this, m2, m1)]);
     };
 
     /**

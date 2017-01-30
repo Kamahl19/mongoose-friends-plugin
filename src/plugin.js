@@ -33,13 +33,12 @@ function friendsPlugin(options) {
    * @param Model the extending model
    * @param m1 the model or model _id being queried
    * @param m2 the model or model _id whose friendship is queried for
-   * @param that context
    *
    * @returns a function which will call back with an friendship for m2 on m1
    * @api private
    */
-  const friendshipBetween = (m1, m2, that) => {
-    return that.findById(m1, {
+  const friendshipBetween = function(m1, m2) {
+    return this.findById(m1, {
       [pathName]: { $elemMatch: { _id: m2 } },
     })
       .then((doc) => {
@@ -57,7 +56,7 @@ function friendsPlugin(options) {
    * @returns a function to create a new friendship between two parties
    * @api private
    */
-  const createFriendship = (m1, m2, fship, data) => {
+  const createFriendship = function(m1, m2, fship, data) {
     fship.added = new Date();
     fship.data = data;
 
@@ -75,7 +74,7 @@ function friendsPlugin(options) {
    * @returns a function to update a friendship between two parties
    * @api private
    */
-  const updateFriendship = (m1, m2, fship) => {
+  const updateFriendship = function(m1, m2, fship) {
     return this.findOneAndUpdate({
       _id: m1,
       [pathName]: { $elemMatch: { _id: m2 } },
@@ -93,7 +92,7 @@ function friendsPlugin(options) {
    * @returns a function to remove a friendship between two parties
    * @api private
    */
-  const removeFriendship = (m1, m2) => {
+  const removeFriendship = function(m1, m2) {
     return this.collection.update({ _id: m1 }, {
       $pull: {
         [pathName]: { _id: m2 }
@@ -132,8 +131,8 @@ function friendsPlugin(options) {
       m2 = m2._id || m2;
 
       return Promise.all([
-        friendshipBetween(m1, m2, this),
-        friendshipBetween(m2, m1, this),
+        friendshipBetween.call(this, m1, m2),
+        friendshipBetween.call(this, m2, m1),
       ])
         .then(([m1Res, m2Res]) => {
           const hasfship = !!m1Res;
@@ -147,10 +146,10 @@ function friendsPlugin(options) {
           if (!m2Res) {
             fship.status = Status.Requested;
 
-            steps[0] = createFriendship(m2, m1, {
+            steps[0] = createFriendship.call(this, m2, m1, {
               _id: m1,
               status: Status.Pending,
-            }, data).bind(this);
+            }, data);
           }
           else {
             switch (m2Res.status) {
@@ -165,9 +164,9 @@ function friendsPlugin(options) {
               // m2 already requested m1, mark BOTH friendships as accepted
               case Status.Requested:
                 fship.status = Status.Accepted;
-                steps[0] = updateFriendship(m2, m1, {
+                steps[0] = updateFriendship.call(this, m2, m1, {
                   status: Status.Accepted
-                }).bind(this);
+                });
                 break;
             }
           }
@@ -183,11 +182,11 @@ function friendsPlugin(options) {
           }
           // Otherwise update it
           else if (hasfship) {
-            steps[1] = updateFriendship(m1, m2, fship).bind(this);
+            steps[1] = updateFriendship.call(this, m1, m2, fship);
           }
           // Or push a new one if it did not exist prior
           else {
-            steps[1] = createFriendship(m1, m2, fship, data).bind(this);
+            steps[1] = createFriendship.call(this, m1, m2, fship, data);
           }
 
           return Promise.all(steps)
@@ -380,7 +379,7 @@ function friendsPlugin(options) {
       m1 = m1._id || m1;
       m2 = m2._id || m2;
 
-      return friendshipBetween(m1, m2, this)
+      return friendshipBetween.call(this, m1, m2)
         .then((doc) => Promise.resolve(!!doc && doc.status === Status.Accepted))
         .catch(() => Promise.resolve(false));
     }
@@ -407,8 +406,8 @@ function friendsPlugin(options) {
       m2 = m2._id || m2;
 
       return Promise.all([
-        removeFriendship(m1, m2).bind(this),
-        removeFriendship(m2, m1).bind(this),
+        removeFriendship.call(this, m1, m2),
+        removeFriendship.call(this, m2, m1),
       ]);
     };
 
