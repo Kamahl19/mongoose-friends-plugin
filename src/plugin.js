@@ -15,19 +15,20 @@ const Friendship = {
 const defaultOptions = {
   pathName: 'friends',
   doIndex: true,
+  select: false,
 };
 
 module.exports = friendsPlugin;
 
 function friendsPlugin(options) {
-  const { pathName, doIndex } = {
+  const { pathName, doIndex, select } = {
     ...defaultOptions,
     ...options,
   };
 
   // Fields to add to the extending model
   const fields = {
-    [pathName]: { type: [Friendship], select: false },
+    [pathName]: { type: [Friendship], select },
   };
 
   /**

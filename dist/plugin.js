@@ -23,7 +23,8 @@ var Friendship = {
 
 var defaultOptions = {
   pathName: 'friends',
-  doIndex: true
+  doIndex: true,
+  select: false
 };
 
 module.exports = friendsPlugin;
@@ -31,12 +32,13 @@ module.exports = friendsPlugin;
 function friendsPlugin(options) {
   var _defaultOptions$optio = _extends({}, defaultOptions, options),
       pathName = _defaultOptions$optio.pathName,
-      doIndex = _defaultOptions$optio.doIndex;
+      doIndex = _defaultOptions$optio.doIndex,
+      select = _defaultOptions$optio.select;
 
   // Fields to add to the extending model
 
 
-  var fields = _defineProperty({}, pathName, { type: [Friendship], select: false });
+  var fields = _defineProperty({}, pathName, { type: [Friendship], select: select });
 
   /**
    * Generate a function to return one side of a friendship between two models

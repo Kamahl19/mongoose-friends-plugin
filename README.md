@@ -27,7 +27,8 @@ Then include the plugin in the schema definition:
     const schema = new mongoose.Schema({ ... });
 
     // optionally specify a name for the path (default is "friends")
-    schema.plugin(friendsPlugin({ pathName: 'myCustomPath' }));
+    // optionally specify select option for collection of friendships (specifies default projections for queries)
+    schema.plugin(friendsPlugin({ pathName: 'myCustomPath', select: true }));
 
     const User = mongoose.model('User', schema);
 
