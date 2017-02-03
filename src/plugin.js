@@ -141,6 +141,7 @@ function friendsPlugin(options) {
         .then(([m1Res, m2Res]) => {
           const hasfship = !!m1Res;
           const fship = m1Res || { _id: m2 };
+          const oid = fship._id;
           const ostatus = fship.status;
 
           const steps = [];
@@ -181,7 +182,7 @@ function friendsPlugin(options) {
           }
 
           // If no update was necessary, send the local friendship back directly
-          if (hasfship && ostatus === fship.status) {
+          if (hasfship && ostatus === fship.status && oid.equals(fship._id)) {
             steps[1] = Promise.resolve(fship);
           }
           // Otherwise update it
