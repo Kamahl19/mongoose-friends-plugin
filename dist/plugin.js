@@ -23,8 +23,7 @@ var Friendship = {
 
 var defaultOptions = {
   pathName: 'friends',
-  doIndex: true,
-  select: false
+  doIndex: true
 };
 
 module.exports = friendsPlugin;
@@ -32,13 +31,12 @@ module.exports = friendsPlugin;
 function friendsPlugin(options) {
   var _defaultOptions$optio = _extends({}, defaultOptions, options),
       pathName = _defaultOptions$optio.pathName,
-      doIndex = _defaultOptions$optio.doIndex,
-      select = _defaultOptions$optio.select;
+      doIndex = _defaultOptions$optio.doIndex;
 
   // Fields to add to the extending model
 
 
-  var fields = _defineProperty({}, pathName, { type: [Friendship], select: select });
+  var fields = _defineProperty({}, pathName, { type: [Friendship], select: false });
 
   /**
    * Generate a function to return one side of a friendship between two models
@@ -142,6 +140,7 @@ function friendsPlugin(options) {
 
         var hasfship = !!m1Res;
         var fship = m1Res || { _id: m2 };
+        var oid = fship._id;
         var ostatus = fship.status;
 
         var steps = [];
@@ -181,7 +180,7 @@ function friendsPlugin(options) {
         }
 
         // If no update was necessary, send the local friendship back directly
-        if (hasfship && ostatus === fship.status) {
+        if (hasfship && ostatus === fship.status && oid.equals(fship._id)) {
           steps[1] = Promise.resolve(fship);
         }
         // Otherwise update it
