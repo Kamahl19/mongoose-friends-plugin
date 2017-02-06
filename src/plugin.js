@@ -7,7 +7,7 @@ const Status = {
 };
 
 const Friendship = {
-  status: { type: String, enum: Object.values(Status) },
+  status: { type: String, enum: getObjectValues(Status) },
   added: { type: Date },
   data: { type: Schema.Types.Mixed },
 };
@@ -430,3 +430,7 @@ function friendsPlugin(options) {
 friendsPlugin.Status = Status;
 
 friendsPlugin.Friendship = Friendship;
+
+function getObjectValues(obj) {
+  return Object.keys(obj).reduce((values, key) => values.push(obj[key]) && values, []);
+}
