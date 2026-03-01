@@ -43,7 +43,7 @@
     "gulp-mocha": "3.0.1",
     "gulp-rimraf": "0.2.1",
     "mocha": "3.2.0",
-    "mongoose": "4.8.1",
+    "mongoose": "6.13.6",
     "rimraf": "2.5.4",
     "run-sequence": "1.2.2",
     "should": "11.1.2"
